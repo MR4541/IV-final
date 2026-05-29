@@ -1,1 +1,35 @@
 # Introduction to Intelligent Vehicles Final Project
+
+## Project Structure
+
+```
+IV-final/
+├── .gitignore
+├── README.md
+├── docs/
+│   ├── api_spec.md             # schema of JSON files
+│   └── ...                     # other documents...
+├── config/                     # each JSON represents a type of intersection
+│   ├── intersection_1.json
+│   ├── intersection_2.json
+│   └── ...
+├── data/                       # dynamic files
+│   └── ...                     # output from Generator, Manager, ...
+├── src/                        # source codes
+│   ├── generator/              # Traffic Generator (Python)
+│   │   ├── requirements.txt
+│   │   └── ...
+│   ├── manager/                # Intersection Manager (C++)
+│   │   ├── src/
+│   │   ├── include/
+│   │   └── ...
+│   └── visualizer/             # Pygame Visualizer & Plotter (Python)
+│       ├── requirements.txt
+│       └── ...
+└── scripts/                    # (if any)
+    └── run_experiments.sh      # something like this
+```
+
+## Misc
+
+- 有些ㄧ開始是空的資料夾，我在底下放 .gitkeep 讓 git 可以 track 到目錄

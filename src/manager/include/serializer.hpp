@@ -24,14 +24,25 @@ typedef struct {
     int vid;                    // vehicle id
     int arrival_time;
     int source_lane;
+    int destination_lane;
     std::vector<int> zones;     // represent a trajectory
     // output
     std::vector<int> schedule;  // time to visit each conflict zone
 } Vehicle;
 
+enum EdgeType {TYPE1, TYPE2, TYPE3};
+
 // Data: all we need to perform intersection management
 typedef struct Data{
-    int zone_delay; // minimum time to pass a conflict zone
+    // info of intersection
+    
+    int zone_pass; // vertex passing time
+    std::vector<int> edge_wait; // edge waiting time[3]
+    int N; // number of conflict zones
+
+    // info of vehicles
+    
+    int M; // number of vehicles
     std::vector<Vehicle> vehicles;
     int is_scheduled; // set to 0 before scheduling
     

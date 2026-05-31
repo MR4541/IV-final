@@ -9,6 +9,7 @@ using json = nlohmann::json;
 void from_json(const json& j, Vehicle& v){
     j.at("vid").get_to(v.vid);
     j.at("src_lane").get_to(v.source_lane);
+    j.at("dest_lane").get_to(v.destination_lane);
     j.at("path").get_to(v.zones);
     j.at("arrival").get_to(v.arrival_time);
 }
@@ -18,7 +19,10 @@ void Data::readInput(std::string inputFile){
     std::ifstream f(inputFile);
     json inputData = json::parse(f);
     
-    this->zone_delay = inputData["zone_delay"];
+    this->zone_pass = inputData["zone_passing_time"];
+    this->edge_wait = inputData["edge_waiting_time"].get<std::vector<int>>();
+    this->N = inputData["n_zones"];
+    this->M = inputData["n_vehicles"];
     this->vehicles = inputData["vehicles"].get<std::vector<Vehicle>>();
     this->is_scheduled = 0;
     for(auto& car : this->vehicles){
@@ -31,6 +35,9 @@ void Data::readInput(std::string inputFile){
 void to_json(json& j, const Vehicle& v){
     j = json{
         {"vid", v.vid},
+        {"src_lane", v.source_lane},
+        {"dest_lane", v.destination_lane},
+        {"arrival", v.arrival_time},
         {"path", v.zones},
         {"schedule", v.schedule}
     };
@@ -40,6 +47,7 @@ void to_json(json& j, const Vehicle& v){
 void Data::writeOutput(std::string outputFile){
     json outputData;
     outputData["vehicles"] = this->vehicles;
+    outputData["n_vehicles"] = this->M;
 
     std::ofstream f(outputFile);
     f << outputData.dump(2); // indent = 2
@@ -49,15 +57,19 @@ void Data::writeOutput(std::string outputFile){
 void Data::printContent(){
     printf("===== printContent =====\n"
             "%s"
-            "zone delay: %d\n"
+            "N: %d, M: %d\n"
+            "zone_pass: %d, edge_wait: %d %d %d\n"
             "vehicles:\n",
             this->is_scheduled? "" : "not scheduled yet!\n",
-            this->zone_delay);
+            this->N, this->M,
+            this->zone_pass, this->edge_wait[0],
+            this->edge_wait[1], this->edge_wait[2]);
     for(const auto& car : this->vehicles){
         printf("[vid %3d]\n"
-                "\tarrive_time: %d, srcLane: %d\n"
+                "\tarrive_time: %d, src: %d, dest: %d\n"
                 "\tzones:",
-                car.vid, car.arrival_time, car.source_lane);
+                car.vid, car.arrival_time, car.source_lane, 
+                car.destination_lane);
         int path_len = car.zones.size();
         for(int i = 0; i < path_len; i++){
             printf(" %3d", car.zones[i]);

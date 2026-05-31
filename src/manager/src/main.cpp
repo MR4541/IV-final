@@ -1,14 +1,18 @@
 #include <iostream>
-#include "json.hpp"
 #include "serializer.hpp"
 
-using json = nlohmann::json;
+int main(int argc, char *argv[]){
+    if(argc != 3){
+        std::cerr << "Error: Incorrect number of arguments\n";
+        std::cerr << "Usage: " << argv[0] << " <inputFile> <outputFile>\n";
+        return 1;
+    }
 
-int main(void){
-    std::cout << "main started\n";
-    Data data("mockdata/input_1.json");
-    
+    std::cout << argv[0] << " started\n";
+
+    Data data(argv[1]);
     data.printContent();
+    data.writeOutput(argv[2]);
 
-    data.writeOutput("mockdata/output_1.json");
+    return 0;
 }

@@ -2,6 +2,20 @@
   "n_vehicles": 3,
   "vehicles": [
     {
+      "arrival": 0,
+      "dest_lane": 4,
+      "path": [
+        3,
+        2
+      ],
+      "schedule": [
+        0,
+        0
+      ],
+      "src_lane": 2,
+      "vid": 3
+    },
+    {
       "arrival": 10,
       "dest_lane": 2,
       "path": [
@@ -30,20 +44,6 @@
       ],
       "src_lane": 1,
       "vid": 2
-    },
-    {
-      "arrival": 0,
-      "dest_lane": 4,
-      "path": [
-        3,
-        2
-      ],
-      "schedule": [
-        0,
-        0
-      ],
-      "src_lane": 2,
-      "vid": 3
     }
   ]
 }

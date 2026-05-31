@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <fstream>
+#include <algorithm>
 #include "json.hpp"
 #include "serializer.hpp"
 
@@ -24,6 +25,11 @@ void Data::readInput(std::string inputFile){
     this->N = inputData["n_zones"];
     this->M = inputData["n_vehicles"];
     this->vehicles = inputData["vehicles"].get<std::vector<Vehicle>>();
+    // sort vehicles by arrival_time in ascending order
+    std::sort(this->vehicles.begin(), this->vehicles.end(),
+            [](const Vehicle& a, const Vehicle& b){
+                return a.arrival_time < b.arrival_time;
+            });
     this->is_scheduled = 0;
     for(auto& car : this->vehicles){
         car.schedule.resize(car.zones.size());

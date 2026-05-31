@@ -43,7 +43,7 @@ typedef struct Data{
     // info of vehicles
     
     int M; // number of vehicles
-    std::vector<Vehicle> vehicles;
+    std::vector<Vehicle> vehicles; // sort by arrival_time in ascending order
     int is_scheduled; // set to 0 before scheduling
     
     // methods

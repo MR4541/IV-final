@@ -1,0 +1,11 @@
+{
+    "n_vehicles": 3,
+    "vehicles": [
+        {"vid": 1, "src_lane": 1, "dest_lane": 2, "path": [1, 2, 3], "arrival": 10},
+        {"vid": 2, "src_lane": 1, "dest_lane": 3, "path": [1, 2], "arrival": 20},
+        {"vid": 3, "src_lane": 2, "dest_lane": 4, "path": [3, 2], "arrival": 0}
+    ],
+    "zone_passing_time": 10,
+    "edge_waiting_time": [1, 2, 2],
+    "n_zones": 4
+}

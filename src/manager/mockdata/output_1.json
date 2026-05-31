@@ -1,0 +1,49 @@
+{
+  "n_vehicles": 3,
+  "vehicles": [
+    {
+      "arrival": 10,
+      "dest_lane": 2,
+      "path": [
+        1,
+        2,
+        3
+      ],
+      "schedule": [
+        0,
+        0,
+        0
+      ],
+      "src_lane": 1,
+      "vid": 1
+    },
+    {
+      "arrival": 20,
+      "dest_lane": 3,
+      "path": [
+        1,
+        2
+      ],
+      "schedule": [
+        0,
+        0
+      ],
+      "src_lane": 1,
+      "vid": 2
+    },
+    {
+      "arrival": 0,
+      "dest_lane": 4,
+      "path": [
+        3,
+        2
+      ],
+      "schedule": [
+        0,
+        0
+      ],
+      "src_lane": 2,
+      "vid": 3
+    }
+  ]
+}

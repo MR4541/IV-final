@@ -1,0 +1,7 @@
+{
+    "vehicles": [
+        {"vid": 1, "src_lane": 1, "path": [1, 2, 3], "arrival": 1},
+        {"vid": 2, "src_lane": 1, "path": [1, 2], "arrival": 2}
+    ],
+    "zone_delay": 1
+}

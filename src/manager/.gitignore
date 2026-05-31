@@ -1,0 +1,7 @@
+# dynamic files
+bin
+build
+
+# these are for personal use
+compile_flags.txt
+report.md

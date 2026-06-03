@@ -1,99 +1,112 @@
+# Data Exchange Formats between Components
+
 論文裡面設定的 zone_passing_time 是 1s、type-1/2/3 edge 的 waiting_time 是 0.1/0.2/0.2s。
 為了方便就用 0.1s 當 1 time unit，這樣所有跟時間有關的值都會是整數好欸。
 
-## intersection.json
+## Intersections
 
-**待定**
+An *intersection* is defined using a JSON file
+containing the 2D coordinates of the start and the end of each lane,
+assuming that all lanes are straight lines.
 
-Manager 需要：
-- 一個整數表示「通過」一個 conflict zone 的時間 (vertex passing time)，論文是設 1s = 10 time units
-- 三個整數表示 type-1/2/3 edge 的 edge waiting time，論文設 0.1/0.2/0.2s = 1/2/2 time units
-由 Generator 把這些值從 intersection.json 中抓出來一起放到 JSON 裡面 Manager
-
-## input of Manager
-
-Schema:
 ```json
 {
-  "n_vehicles": "Number",
-  "vehicles": [
+  "lanes": [
     {
-      "vid": "Number",
-      "src_lane": "Number (source lane)",
-      "dest_lane": "Number (destination lane)",
-      "path": ["Number (經過的conflict zones)"],
-      "arrival": "Number (到達路口時間)"
-    }
+      "start": [x, y],
+      "end": [x, y]
+    },
+    {
+      "start": [x, y],
+      "end": [x, y]
+    },
+    ...
+  ]
+}
+```
+
+Coodinate components `x` and `y` are integers.
+The lanes may be referenced by their ID,
+which is a non-negative integer implicitly assigned
+by the 0-based order of appearance in the `lanes` array,
+i.e., the first lane in `lanes` has ID `0` and the second one has ID `1`, etc.
+
+## Scenarios
+
+A *scenario* is defined using a JSON file
+containing trajectories of multiple vehicles.
+A *trajectory* is defined using a list of *conflict zones*,
+(intersection between lanes)
+that the vehicle should pass through.
+A conflict zone is defined by the ID of the lanes that formed the zone.
+
+```json
+{
+  "zone_passing_time": value,
+  "edge_waiting_time": [type1, type2, type3],
+  "zones": [
+    [lane_id, lane_id, ...],
+    [lane_id, lane_id, ...],
+    ...
   ],
-  "zone_passing_time": "Number (從intersection.json讀)",
-  "edge_waiting_time": ["Number (從intersection.json讀，type1,2,3edge各一個)"],
-  "n_zones": "Number (從intersection.json讀)"
-}
-```
-
-Example:
-```json
-{
-    "n_vehicles": 3,
-    "vehicles": [
-        {"vid": 1, "src_lane": 1, "dest_lane": 2, "path": [1, 2, 3], "arrival": 10},
-        {"vid": 2, "src_lane": 1, "dest_lane": 3, "path": [1, 2], "arrival": 20},
-        {"vid": 3, "src_lane": 2, "dest_lane": 4, "path": [3, 2], "arrival": 0}
-    ],
-    "zone_passing_time": 10,
-    "edge_waiting_time": [1, 2, 2],
-    "n_zones": 4
-}
-```
-
-## output of Manager
-
-Schema:
-```json
-{
-  "n_vehicles": "Number",
   "vehicles": [
     {
-      "vid": "Number",
-      "src_lane": "Number (起始車道)",
-      "dest_lane": "Number (目標車道)",
-      "path": ["Number (經過的conflict zones)"],
-      "schedule": ["Number (排程後enter每個zone的時間)"],
-      "arrival": "Number (到達路口時間)"
-    }
+      "arrival": value,
+      "src_lane": lane_id,
+      "dst_lane": lane_id,
+      "path": [zone_id, zone_id, ..., zone_id]
+    },
+    ...
   ]
 }
 ```
 
-Example:
+`zone_id` are implicitly assigned by the 0-based order of appearance
+in the `zones` array.
+An example is as follows:
+
 ```json
 {
-  "n_vehicles": 3,
+  "zone_passing_time": 10,
+  "edge_waiting_time": [1, 2, 2],
+  "zones": [[0, 3], [0, 1], [1, 2], [2, 3]],
   "vehicles": [
-    {
-      "arrival": 10,
-      "dest_lane": 2,
-      "path": [1, 2, 3],
-      "schedule": [0, 0, 0],
-      "src_lane": 1,
-      "vid": 1
-    },
-    {
-      "arrival": 20,
-      "dest_lane": 3,
-      "path": [1, 2],
-      "schedule": [0, 0],
-      "src_lane": 1,
-      "vid": 2
-    },
-    {
-      "arrival": 0,
-      "dest_lane": 4,
-      "path": [3, 2],
-      "schedule": [0, 0],
-      "src_lane": 2,
-      "vid": 3
-    }
+    {"arrival": 0, "src_lane": 0, "dst_lane": 1, "path": [0, 1, 2]},
+    {"arrival": 10, "src_lane": 0, "dst_lane": 3, "path": [0]},
+    {"arrival": 0, "src_lane": 2, "dst_lane": 2, "path": [2, 3]},
+    {"arrival": 0, "src_lane": 3, "dst_lane": 3, "path": [3, 0]}
   ]
 }
 ```
+
+## Intersection Manager
+
+The task of an intersection manager is to take the JSON file of a scenario
+and assign the time of entrance of each zone for each vehicle.
+Using the example from [Scenarios](#scenarios),
+the output JSON file from the manager may look like this:
+
+```json
+{
+  "zone_passing_time": 10,
+  "edge_waiting_time": [1, 2, 2],
+  "zones": [[0, 3], [0, 1], [1, 2], [2, 3]],
+  "vehicles": [
+    {"arrival": 0, "src_lane": 0, "dst_lane": 1, "path": [0, 1, 2], "schedule": [0, 10, 20]},
+    {"arrival": 10, "src_lane": 0, "dst_lane": 3, "path": [0], "schedule": [10]},
+    {"arrival": 0, "src_lane": 2, "dst_lane": 2, "path": [2, 3], "schedule": [0, 10]},
+    {"arrival": 0, "src_lane": 3, "dst_lane": 3, "path": [3, 0], "schedule": [0, 20]}
+  ]
+}
+```
+
+## Visualizer
+
+The visualizer should take in both an intersection configuration file
+as defined in [Intersections](#intersections)
+and the output JSON file of the manager
+and display an animation showing the vehicles crossing the intersection
+as scheduled.
+The two input files, as previously defined, should contain all the information
+necessary for creating the animation.
+

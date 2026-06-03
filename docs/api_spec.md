@@ -38,17 +38,14 @@ containing trajectories of multiple vehicles.
 A *trajectory* is defined using a list of *conflict zones*,
 (intersection between lanes)
 that the vehicle should pass through.
-A conflict zone is defined by the ID of the lanes that formed the zone.
+These conflict zones are included in the scenario configuration
+by their 2D coordinates.
 
 ```json
 {
   "zone_passing_time": value,
   "edge_waiting_time": [type1, type2, type3],
-  "zones": [
-    [lane_id, lane_id, ...],
-    [lane_id, lane_id, ...],
-    ...
-  ],
+  "zones": [[x, y], [x, y], ...],
   "vehicles": [
     {
       "arrival": value,
@@ -69,12 +66,13 @@ An example is as follows:
 {
   "zone_passing_time": 10,
   "edge_waiting_time": [1, 2, 2],
-  "zones": [[0, 3], [0, 1], [1, 2], [2, 3]],
+  "zones": [[2.0, 2.0], [1.0, 2.0], [2.0, 1.0], [1.0, 1.0]],
   "vehicles": [
-    {"arrival": 0, "src_lane": 0, "dst_lane": 1, "path": [0, 1, 2]},
-    {"arrival": 10, "src_lane": 0, "dst_lane": 3, "path": [0]},
-    {"arrival": 0, "src_lane": 2, "dst_lane": 2, "path": [2, 3]},
-    {"arrival": 0, "src_lane": 3, "dst_lane": 3, "path": [3, 0]}
+      {"arrival": 11, "src_lane": 2, "dst_lane": 2, "path": [2, 3]},
+      {"arrival": 1, "src_lane": 3, "dst_lane": 2, "path": [3]},
+      {"arrival": 6, "src_lane": 1, "dst_lane": 1, "path": [0, 2]},
+      {"arrival": 12, "src_lane": 2, "dst_lane": 3, "path": [2, 3, 1]},
+      {"arrival": 21, "src_lane": 1, "dst_lane": 0, "path": [0]}
   ]
 }
 ```
@@ -90,12 +88,13 @@ the output JSON file from the manager may look like this:
 {
   "zone_passing_time": 10,
   "edge_waiting_time": [1, 2, 2],
-  "zones": [[0, 3], [0, 1], [1, 2], [2, 3]],
+  "zones": [[2.0, 2.0], [1.0, 2.0], [2.0, 1.0], [1.0, 1.0]],
   "vehicles": [
-    {"arrival": 0, "src_lane": 0, "dst_lane": 1, "path": [0, 1, 2], "schedule": [0, 10, 20]},
-    {"arrival": 10, "src_lane": 0, "dst_lane": 3, "path": [0], "schedule": [10]},
-    {"arrival": 0, "src_lane": 2, "dst_lane": 2, "path": [2, 3], "schedule": [0, 10]},
-    {"arrival": 0, "src_lane": 3, "dst_lane": 3, "path": [3, 0], "schedule": [0, 20]}
+      {"arrival": 11, "src_lane": 2, "dst_lane": 2, "path": [2, 3], "schedule": [15, 20]},
+      {"arrival": 1, "src_lane": 3, "dst_lane": 2, "path": [3], "schedule": [5]},
+      {"arrival": 6, "src_lane": 1, "dst_lane": 1, "path": [0, 2], "schedule": [8, 13]},
+      {"arrival": 12, "src_lane": 2, "dst_lane": 3, "path": [2, 3, 1], "schedule": [23, 34, 44]},
+      {"arrival": 21, "src_lane": 1, "dst_lane": 0, "path": [0], "schedule": [32]}
   ]
 }
 ```

@@ -21,7 +21,6 @@
 // Vehicle: data of one vehicle
 typedef struct {
     // input (read from JSON)
-    int vid;                    // vehicle id
     int arrival_time;
     int source_lane;
     int destination_lane;
@@ -30,7 +29,10 @@ typedef struct {
     std::vector<int> schedule;  // time to visit each conflict zone
 } Vehicle;
 
-enum EdgeType {TYPE1, TYPE2, TYPE3};
+// Point: 2D point for the position of a conflict zone
+typedef struct Point{
+    double x, y;
+} Point;
 
 // Data: all we need to perform intersection management
 typedef struct Data{
@@ -38,7 +40,8 @@ typedef struct Data{
     
     int zone_pass; // vertex passing time
     std::vector<int> edge_wait; // edge waiting time[3]
-    int N; // number of conflict zones
+    int N; // number of conflict zone
+    std::vector<Point> zone_pos_list; // position of all zones
 
     // info of vehicles
     

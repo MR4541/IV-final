@@ -1,49 +1,71 @@
 {
-  "n_vehicles": 3,
+  "edge_waiting_time": [
+    4,
+    3,
+    2
+  ],
   "vehicles": [
     {
-      "arrival": 0,
-      "dest_lane": 4,
+      "arrival": 15,
+      "dst_lane": 2,
       "path": [
-        3,
-        2
-      ],
-      "schedule": [
-        0,
-        0
-      ],
-      "src_lane": 2,
-      "vid": 3
-    },
-    {
-      "arrival": 10,
-      "dest_lane": 2,
-      "path": [
-        1,
         2,
         3
       ],
       "schedule": [
         0,
+        0
+      ],
+      "src_lane": 2
+    },
+    {
+      "arrival": 16,
+      "dst_lane": 0,
+      "path": [
+        3,
+        1,
+        0
+      ],
+      "schedule": [
+        0,
         0,
         0
       ],
-      "src_lane": 1,
-      "vid": 1
+      "src_lane": 3
     },
     {
       "arrival": 20,
-      "dest_lane": 3,
+      "dst_lane": 1,
       "path": [
         1,
+        0,
         2
       ],
       "schedule": [
         0,
+        0,
         0
       ],
-      "src_lane": 1,
-      "vid": 2
+      "src_lane": 0
     }
+  ],
+  "zone_passing_time": 5,
+  "zones": [
+    [
+      2.0,
+      2.0
+    ],
+    [
+      1.0,
+      2.0
+    ],
+    [
+      2.0,
+      1.0
+    ],
+    [
+      1.0,
+      1.0
+    ]
   ]
 }

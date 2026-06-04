@@ -1,11 +1,1 @@
-{
-    "n_vehicles": 3,
-    "vehicles": [
-        {"vid": 1, "src_lane": 1, "dest_lane": 2, "path": [1, 2, 3], "arrival": 10},
-        {"vid": 2, "src_lane": 1, "dest_lane": 3, "path": [1, 2], "arrival": 20},
-        {"vid": 3, "src_lane": 2, "dest_lane": 4, "path": [3, 2], "arrival": 0}
-    ],
-    "zone_passing_time": 10,
-    "edge_waiting_time": [1, 2, 2],
-    "n_zones": 4
-}
+{"zone_passing_time": 5, "edge_waiting_time": [4, 3, 2], "zones": [[2.0, 2.0], [1.0, 2.0], [2.0, 1.0], [1.0, 1.0]], "vehicles": [{"arrival": 15, "src_lane": 2, "dst_lane": 2, "path": [2, 3]}, {"arrival": 20, "src_lane": 0, "dst_lane": 1, "path": [1, 0, 2]}, {"arrival": 16, "src_lane": 3, "dst_lane": 0, "path": [3, 1, 0]}]}

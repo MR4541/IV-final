@@ -33,7 +33,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
             this->edge_list.push_back(std::move(e));
         }
     }
-    // build edges (type 2)
+    // build edges (type 2, 3)
     int max_src_lane = -1;
     for(auto car : d.vehicles)
         max_src_lane = (car.source_lane > max_src_lane)?
@@ -41,7 +41,9 @@ void TimingConflictGraph::buildGraph(const Data& d){
     // [m] means the previous vertex from lane m in zone j
     std::vector<Vertex*> prev_car_in_lane(max_src_lane+1);
     
+    // consier each conflict zone j
     for(int j = 0; j < d.N; j++){
+        // type 2
         std::fill(prev_car_in_lane.begin(),
                 prev_car_in_lane.end(), nullptr);
         for(int i = 0; i < d.M; i++){
@@ -64,21 +66,22 @@ void TimingConflictGraph::buildGraph(const Data& d){
                 prev_car_in_lane[src_lane] = to; // update
             }
         }
-    }
-    // build edges (type 3)
-    for(const auto& u : this->vertex_list){
-        for(const auto& v : this->vertex_list){
-            // tackle one of (u, v) and (v, u) but not both
-            if(u->j != v->j || u->i >= v->i)
+        // type 3
+        for(int i1 = 0; i1 < d.M; i1++){
+            if(vertex_map[i1][j] == NULL)
                 continue;
-            const Vehicle& car_u = d.vehicles[u->i];
-            const Vehicle& car_v = d.vehicles[v->i];
-            if(car_u.source_lane != car_v.source_lane){ //type3
+            for(int i2 = i1; i2 < d.M; i2++){
+                if(vertex_map[i2][j] == NULL
+                        || d.vehicles[i1].source_lane 
+                        == d.vehicles[i2].source_lane)
+                    continue;
+                Vertex *u = vertex_map[i1][j];
+                Vertex *v = vertex_map[i2][j];
                 auto e1 = std::make_unique<Edge>(
-                        Edge{u.get(), v.get(), d.edge_wait[E_TYPE_3],
+                        Edge{u, v, d.edge_wait[E_TYPE_3],
                         NULL, E_TYPE_3, E_UNDECIDED});
                 auto e2 = std::make_unique<Edge>(
-                        Edge{v.get(), u.get(), d.edge_wait[E_TYPE_3],
+                        Edge{v, u, d.edge_wait[E_TYPE_3],
                         NULL, E_TYPE_3, E_UNDECIDED});
                 e1->sibling = e2.get();
                 e2->sibling = e1.get();

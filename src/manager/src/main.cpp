@@ -1,5 +1,6 @@
 #include <iostream>
 #include "serializer.hpp"
+#include "graph_tools.hpp"
 
 int main(int argc, char *argv[]){
     if(argc != 3){
@@ -12,7 +13,11 @@ int main(int argc, char *argv[]){
 
     Data data(argv[1]);
     data.printContent();
-    data.writeOutput(argv[2]);
+    
+    TimingConflictGraph G(data);
+    G.printContentAndCheck();
+
+    //data.writeOutput(argv[2]);
 
     return 0;
 }

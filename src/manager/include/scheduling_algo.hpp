@@ -15,6 +15,8 @@ struct TimingConflictGraph;
 typedef struct SchedAlgo{
     // 3D-intersection (performance upper bound)
     static void threeDimension(TimingConflictGraph& G);
+    // First Come First Serve (performance lower bound)
+    static void firstComeFirstServe(TimingConflictGraph& G);
 }SchedAlgo;
 
 #endif

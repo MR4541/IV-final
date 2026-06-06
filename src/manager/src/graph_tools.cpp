@@ -1,5 +1,4 @@
 #include <cassert>
-#include <cstdio>
 #include <queue>
 #include <unordered_map>
 #include "graph_tools.hpp"
@@ -165,12 +164,7 @@ void TimingConflictGraph::calcVertexEnterTime(){
         assert(e->state == E_ON || e->state == E_OFF);
     std::vector<Vertex*> topoOrder;
     // calculate global order, assert no cycle
-    printf("topo-start\n");
     assert(prioritizedTopoSort(this, topoOrder) == 0);
-    printf("topo-order: ");
-    for(auto u : topoOrder)
-        printf("(%d,%d) ", u->i, u->j);
-    printf("\ntopo-end\n");
     
     // calculate vertex enter time
     for(auto& v : topoOrder){
@@ -178,7 +172,6 @@ void TimingConflictGraph::calcVertexEnterTime(){
         for(auto& e : v->in_edges){
             if(e->state != E_ON)
                 continue;
-            printf("e (%d,%d) -> (%d,%d)\n", e->u->i, e->u->j, e->v->i, e->v->j);
             if(e->type == E_TYPE_1){
                 max_s = std::max(max_s, e->u->s + e->u->p + e->w);
             }else{ // E_TYPE_2 || E_TYPE_3

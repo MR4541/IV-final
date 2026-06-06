@@ -30,6 +30,31 @@ IV-final/
     └── run_experiments.sh      # something like this
 ```
 
+## Usage
+
+### Generator
+
+### Manager
+
+compile:
+```bash
+cd /src/manager
+make clean && make # it requires 15 - 30 sec
+bin/manager <inputFile> <outputFile> <Algo=1|2|3|4|5>
+```
+
+- `inputFile`: a JSON of a scenario
+- `outputFile`: a JSON including schedule
+- `Algo`: the algorithm to use
+1 - 3D-intersecton
+2 - FCFS
+3 - Priority
+4 - Graph-based
+5 - All
+
+
+### Visualizer
+
 ## Misc
 
 - 有些ㄧ開始是空的資料夾，我在底下放 .gitkeep 讓 git 可以 track 到目錄

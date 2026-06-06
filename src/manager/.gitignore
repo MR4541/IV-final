@@ -2,6 +2,9 @@
 bin
 build
 
+# mockdata
+mockdata
+
 # these are for personal use
 compile_flags.txt
 report.md

@@ -1,6 +1,7 @@
 #include <iostream>
 #include "serializer.hpp"
 #include "graph_tools.hpp"
+#include "scheduling_algo.hpp"
 
 int main(int argc, char *argv[]){
     if(argc != 3){
@@ -16,8 +17,15 @@ int main(int argc, char *argv[]){
     
     TimingConflictGraph G(data);
     G.printContentAndCheck();
+    
+    std::cout << "\n[start 3D]\n";
+    SchedAlgo::threeDimension(G);
+    std::cout << "[end 3D]\n\n";
 
-    //data.writeOutput(argv[2]);
+    G.printContentAndCheck();
+
+    data.getSchedOutput(G);
+    data.writeOutput(argv[2]);
 
     return 0;
 }

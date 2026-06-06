@@ -2,6 +2,7 @@
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include "graph_tools.hpp"
 #include "json.hpp"
 #include "serializer.hpp"
 
@@ -43,6 +44,16 @@ void Data::readInput(std::string inputFile){
         car.schedule.assign(car.schedule.size(), 0);
     }
 } // Data::readInput
+
+void Data::getSchedOutput(const TimingConflictGraph& G){
+    for(int i = 0; i < this->M; i++){
+        Vehicle& car = vehicles[i];
+        for(int idx = 0; idx < (int)car.zones.size(); idx++){
+            int j = car.zones[idx];
+            car.schedule[idx] = G.vertex_map[i][j]->s;
+        }
+    }
+}
 
 // helper function to write vector to JSON
 void to_json(json& j, const Vehicle& v){

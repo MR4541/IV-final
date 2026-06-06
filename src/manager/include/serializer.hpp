@@ -15,6 +15,7 @@
  */
 
 
+#include "graph_tools.hpp"
 #include <vector>
 #include <string>
 
@@ -33,6 +34,8 @@ typedef struct {
 typedef struct Point{
     double x, y;
 } Point;
+
+struct TimingConflictGraph;
 
 // Data: all we need to perform intersection management
 typedef struct Data{
@@ -53,6 +56,8 @@ typedef struct Data{
     
     // read input data from inputFile 
     void readInput(std::string inputFile);
+    // read vertex enter time from G
+    void getSchedOutput(const TimingConflictGraph& G);
     // write scheduled result to outputFile
     void writeOutput(std::string outputFile);
     // for debugging purpose

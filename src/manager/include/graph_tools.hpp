@@ -4,16 +4,23 @@
 /**
  * struct TimingConflictGraph
  *
- * // build timing conflict graph from data
- * // Vertex.s will be initialized to 0
- * buildGraph(data);
+ * buildGraph(data)
+ * - build timing conflict graph from struct Data
+ * - Vertex.s will be initialized to 0
  * 
+ * calcVertexEnterTime()
+ * - compute vertex (zone) entering time
+ * - all edges must be either ON or OFF
+ *
+ * Other Usage
  * - to traverse V or E, use vertex_list, edge_list
  * - to get vertex (i, j) use vertex_map[i][j]
  * - to get edges regarding an vertex,
  *   use in_edges and out_edges
+ * - to get reverse edge of type-3 edge e, use e.sibling
  *
  * 
+ *
  * deadlock-verification (resource conflict graph)
  * TODO
  * update-time-slack
@@ -34,9 +41,9 @@ typedef struct Edge{
     Vertex* v; // to
     int w; // weight (edge waiting time)
     Edge* sibling; // for type-3 edge
+    EdgeType type;
     
     // dontcare in initialization
-    EdgeType type;
     EdgeState state;
 }Edge;
 
@@ -46,6 +53,7 @@ typedef struct Vertex{
     int p; // vertex passing time
     std::vector<Edge*> in_edges;
     std::vector<Edge*> out_edges;
+    Edge* type1_edge; // NULL if not exist
     
     // dontcare in initialization
     VertexState state;
@@ -64,11 +72,15 @@ typedef struct TimingConflictGraph{
     std::vector<std::unique_ptr<Edge>> edge_list;
     // to access v_{i,j}, use vertex_map[i][j]
     std::vector<std::vector<Vertex*>> vertex_map;
+    // arrival_time of vehicle i
+    std::vector<int> arrival_time;
 
     // methods
 
     // build graph from Data
     void buildGraph(const Data& d);
+    // calculate Vertex.s based on edge states (on/off)
+    void calcVertexEnterTime();
     // for debugging purpose
     void printContentAndCheck();
 

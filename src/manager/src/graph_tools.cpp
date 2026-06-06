@@ -1,5 +1,7 @@
-#include <memory>
-#include <vector>
+#include <cassert>
+#include <cstdio>
+#include <queue>
+#include <unordered_map>
 #include "graph_tools.hpp"
 #include "serializer.hpp"
 
@@ -14,7 +16,8 @@ void TimingConflictGraph::buildGraph(const Data& d){
         const Vehicle& car = d.vehicles[i];
         for(const auto& j : car.zones){
             auto v = std::make_unique<Vertex>(
-                    Vertex{i, j, d.zone_pass, {}, {}, V_WHITE, 0});
+                    Vertex{i, j, d.zone_pass, {}, {}, nullptr,
+                    V_WHITE, 0});
             this->vertex_map[i][j] = v.get();
             this->vertex_list.push_back(std::move(v));
         }
@@ -28,6 +31,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
             auto e = std::make_unique<Edge>(
                     Edge{u, v, d.edge_wait[E_TYPE_1], NULL,
                     E_TYPE_1, E_UNDECIDED});
+            u->type1_edge = e.get();
             u->out_edges.push_back(e.get());
             v->in_edges.push_back(e.get());
             this->edge_list.push_back(std::move(e));
@@ -94,11 +98,116 @@ void TimingConflictGraph::buildGraph(const Data& d){
             }
         }
     }
+    // copy arrival_time
+    this->arrival_time.resize(d.M);
+    for(int i = 0; i < d.M; i++)
+        this->arrival_time[i] = d.vehicles[i].arrival_time;
+}
+
+// 1 if cycle exists
+int prioritizedTopoSort(TimingConflictGraph *G,
+        std::vector<Vertex*>& topoOrder){
+    // kahn's algorithm but with pseudo edges
+    std::unordered_map<Vertex*, int> in_degree;
+    for(const auto& v : G->vertex_list)
+        in_degree[v.get()] = 0;
+    for(const auto& e : G->edge_list) // add ON edges
+        if(e->state == E_ON)
+            in_degree[e->v]++;
+
+    // add pseudo edge
+    std::unordered_map<Vertex*, std::vector<Vertex*>> pseudo_edges;
+    for(const auto& u : G->vertex_list){
+        // type 1 edge (u.i, u.j) -> (u.i, j2)
+        if(u->type1_edge == NULL)
+            continue;
+        // for type 2/3 edge (u.i, u.j) -> (i2, u.j)
+        // add pseudo edge (u.i, j2) -> (i2, u.j)
+        for(const auto& e : u->out_edges){
+            if(e->type == E_TYPE_1 || e->state != E_ON)
+                continue;
+            pseudo_edges[u->type1_edge->v].push_back(e->v);
+            in_degree[e->v]++;
+        }
+    }
+
+    std::queue<Vertex*> q;
+    for(const auto& v : G->vertex_list)
+        if(in_degree[v.get()] == 0)
+            q.push(v.get());
+    
+    while(!q.empty()){
+        Vertex* u = q.front();
+        topoOrder.push_back(u);
+        q.pop();
+
+        for(auto& e : u->out_edges){ // real edges
+            if(e->state != E_ON)
+                continue;
+            in_degree[e->v]--;
+            if(in_degree[e->v] == 0)
+                q.push(e->v);
+        }
+        if(pseudo_edges.count(u)){ // if [u] exists
+            for(auto& fake_v : pseudo_edges[u]){
+                in_degree[fake_v]--;
+                if(in_degree[fake_v] == 0)
+                    q.push(fake_v);
+            }
+        }
+    }
+    // cycle detection
+    return topoOrder.size() != G->vertex_list.size();
+}
+
+void TimingConflictGraph::calcVertexEnterTime(){
+    for(const auto& e : edge_list)
+        assert(e->state == E_ON || e->state == E_OFF);
+    std::vector<Vertex*> topoOrder;
+    // calculate global order, assert no cycle
+    printf("topo-start\n");
+    assert(prioritizedTopoSort(this, topoOrder) == 0);
+    printf("topo-order: ");
+    for(auto u : topoOrder)
+        printf("(%d,%d) ", u->i, u->j);
+    printf("\ntopo-end\n");
+    
+    // calculate vertex enter time
+    for(auto& v : topoOrder){
+        int max_s = arrival_time[v->i];
+        for(auto& e : v->in_edges){
+            if(e->state != E_ON)
+                continue;
+            printf("e (%d,%d) -> (%d,%d)\n", e->u->i, e->u->j, e->v->i, e->v->j);
+            if(e->type == E_TYPE_1){
+                max_s = std::max(max_s, e->u->s + e->u->p + e->w);
+            }else{ // E_TYPE_2 || E_TYPE_3
+                if(e->u->type1_edge == NULL){
+                    max_s = std::max(max_s, e->u->s + e->u->p + e->w);
+                }else{
+                    // note that s-w+w >= s+p+w
+                    // so we don't need to max(max_s, s+p+w)
+                    max_s = std::max(max_s,
+                            e->u->type1_edge->v->s 
+                            - e->u->type1_edge->w + e->w);
+                }
+            }
+        }
+        v->s = max_s;
+    }
 }
 
 int printEdge(const Edge* e){
-    printf("\t(%d,%d)->(%d,%d) T-%d w %d\n",
-            e->u->i, e->u->j, e->v->i, e->v->j, e->type+1, e->w);
+    std::string state;
+    switch(e->state){
+        case E_ON: state = "ON"; break;
+        case E_OFF: state = "OFF"; break;
+        case E_UNDECIDED: state = "UNDECIDED"; break;
+        case E_DONTCARE: state = "DOTCAR"; break;
+    }
+    printf("\t(%d,%d)->(%d,%d) T-%d w %d [%s]\n",
+            e->u->i, e->u->j, e->v->i, e->v->j, e->type+1,
+            e->w, state.c_str());
     if(e->type == E_TYPE_3){
         const Edge* sib = e->sibling;
         if(!(e->u == sib->v && e->v == sib->u)){
@@ -115,8 +224,12 @@ void TimingConflictGraph::printContentAndCheck(){
             "vertex_list:\n", (int)edge_list.size());
     int in_edges_num = 0, out_edges_num = 0, pair_error = 0;
     for(const auto& u : vertex_list){
-        printf("[i %3d, j %3d], passing_time: %d\n"
-                "\tin_edges:\n", u->i, u->j, u->p);
+        printf("[i %3d, j %3d], s %3d, pass_time: %d\n"
+                "\ttype1_edges:", u->i, u->j, u->s, u->p);
+        if(u->type1_edge != NULL) printf(" -> (%d, %d)\n",
+                u->type1_edge->v->i, u->type1_edge->v->j);
+        else printf(" DNE\n");
+        printf("\tin_edges:\n");
         for(const auto& e : u->in_edges){
             pair_error += printEdge(e);
             in_edges_num++;

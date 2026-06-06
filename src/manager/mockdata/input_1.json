@@ -1,1 +1,7 @@
-{"zone_passing_time": 5, "edge_waiting_time": [4, 3, 2], "zones": [[2.0, 2.0], [1.0, 2.0], [2.0, 1.0], [1.0, 1.0]], "vehicles": [{"arrival": 15, "src_lane": 2, "dst_lane": 2, "path": [2, 3]}, {"arrival": 20, "src_lane": 0, "dst_lane": 1, "path": [1, 0, 2]}, {"arrival": 16, "src_lane": 3, "dst_lane": 0, "path": [3, 1, 0]}]}
+{"zone_passing_time": 5, "edge_waiting_time": [4, 3, 2], "zones": [[2.0, 2.0], [1.0, 2.0], [2.0, 1.0], [1.0, 1.0]], "vehicles": [
+  {"arrival": 15, "src_lane": 2, "dst_lane": 2, "path": [2, 3]},
+  {"arrival": 30, "src_lane": 2, "dst_lane": 1, "path": [2]},
+  {"arrival": 40, "src_lane": 2, "dst_lane": 3, "path": [2, 3, 1]},
+  {"arrival": 20, "src_lane": 0, "dst_lane": 1, "path": [1, 0, 2]},
+  {"arrival": 16, "src_lane": 3, "dst_lane": 0, "path": [3, 1, 0]}
+]}

@@ -13,8 +13,8 @@
         3
       ],
       "schedule": [
-        0,
-        0
+        15,
+        24
       ],
       "src_lane": 2
     },
@@ -27,9 +27,9 @@
         0
       ],
       "schedule": [
-        0,
-        0,
-        0
+        31,
+        40,
+        49
       ],
       "src_lane": 3
     },
@@ -42,11 +42,37 @@
         2
       ],
       "schedule": [
-        0,
-        0,
-        0
+        47,
+        56,
+        65
       ],
       "src_lane": 0
+    },
+    {
+      "arrival": 30,
+      "dst_lane": 1,
+      "path": [
+        2
+      ],
+      "schedule": [
+        72
+      ],
+      "src_lane": 2
+    },
+    {
+      "arrival": 40,
+      "dst_lane": 3,
+      "path": [
+        2,
+        3,
+        1
+      ],
+      "schedule": [
+        80,
+        89,
+        98
+      ],
+      "src_lane": 2
     }
   ],
   "zone_passing_time": 5,

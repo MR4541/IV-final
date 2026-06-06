@@ -8,6 +8,10 @@
  *
  * threeDimension(G)
  * - assume type 3 edges does no exist
+ *
+ * firstComeFirstServe(G)
+ * - turn on type 3 edge u->v if u.i < v.i
+ *   because vehicles are sorted by arrival time
  */
 
 struct TimingConflictGraph;

@@ -52,7 +52,7 @@ def route(src: list[int], dst: list[int]) -> list[int]:
     b = dst.index(x)
     return src[:a] + dst[b:]
 
-def get_routes(roads: list[list[int]]) -> list[list[int]]:
+def get_routes(roads: list[list[int]]) -> list[tuple[int, int, list[int]]]:
     routes = []
     for i, j in product(range(len(roads)), range(len(roads))):
         x = roads[i] if i == j else route(roads[i], roads[j])
@@ -69,18 +69,22 @@ def main(args) -> None:
     zones, roads = to_zones(lanes)
     routes = get_routes(roads)
     n = int(args.rate * args.time)
-    arrivals = random.choices(range(args.time), k=n)
-    paths = random.choices(routes, k=n)
-    scenario = {
-        'zone_passing_time': args.zone_passing_time,
-        'edge_waiting_time': args.edge_waiting_time,
-        'zones': zones,
-        'vehicles': [{
+    vehicles = []
+    for i in range(len(lanes)):
+        k = n // len(lanes) + (i == 0) * (n % len(lanes))
+        arrivals = random.sample(range(args.time), k=k)
+        paths = random.choices([x for x in routes if x[0] == i], k=k)
+        vehicles += [{
             'arrival': a,
             'src_lane': p[0],
             'dst_lane': p[1],
             'path': p[2]
         } for a, p in zip(arrivals, paths)]
+    scenario = {
+        'zone_passing_time': args.zone_passing_time,
+        'edge_waiting_time': args.edge_waiting_time,
+        'zones': zones,
+        'vehicles': vehicles
     }
     with open(args.output, 'w') as f:
         json.dump(scenario, f)
@@ -124,6 +128,7 @@ if __name__ == '__main__':
         type=int,
         nargs=3,
         default=[1, 2, 2],
+        metavar=('TYPE_1', 'TYPE_2', 'TYPE_3'),
         help='edge waiting time for type 1, 2, and 3 edges (in ticks)'
     )
     main(parser.parse_args())

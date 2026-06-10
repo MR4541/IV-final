@@ -57,6 +57,7 @@ typedef struct Vertex{
     
     // dontcare in initialization
     VertexState state;
+    int is_locked; // for priority-based
     
     // our goal
     int s; // zone entering time

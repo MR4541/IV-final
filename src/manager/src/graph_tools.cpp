@@ -16,7 +16,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
         for(const auto& j : car.zones){
             auto v = std::make_unique<Vertex>(
                     Vertex{i, j, d.zone_pass, {}, {}, nullptr,
-                    V_WHITE, 0});
+                    V_WHITE, 0, 0});
             this->vertex_map[i][j] = v.get();
             this->vertex_list.push_back(std::move(v));
         }

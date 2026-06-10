@@ -30,6 +30,8 @@ int main(int argc, char *argv[]){
             SchedAlgo::firstComeFirstServe(G);
             break;
         case 3:
+            SchedAlgo::priorityBased(G);
+            break;
         case 4:
         default:
             std::cout << "Not Implemented Yet QAQ\n";

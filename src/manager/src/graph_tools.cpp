@@ -16,7 +16,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
         for(const auto& j : car.zones){
             auto v = std::make_unique<Vertex>(
                     Vertex{i, j, d.zone_pass, {}, {}, nullptr,
-                    V_WHITE, 0});
+                    V_WHITE, 0, 0});
             this->vertex_map[i][j] = v.get();
             this->vertex_list.push_back(std::move(v));
         }
@@ -101,6 +101,10 @@ void TimingConflictGraph::buildGraph(const Data& d){
     this->arrival_time.resize(d.M);
     for(int i = 0; i < d.M; i++)
         this->arrival_time[i] = d.vehicles[i].arrival_time;
+    this->source_lane.resize(d.M);
+    for(int i = 0; i < d.M; i++)
+        this->source_lane[i] = d.vehicles[i].source_lane;
+    this->same_src_delay = d.zone_pass + d.edge_wait[E_TYPE_2];
 }
 
 // 1 if cycle exists

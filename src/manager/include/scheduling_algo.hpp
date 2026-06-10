@@ -12,6 +12,12 @@
  * firstComeFirstServe(G)
  * - turn on type 3 edge u->v if u.i < v.i
  *   because vehicles are sorted by arrival time
+ *
+ * priorityBased(G)
+ * - set simulated time = 0
+ * - calculate estimated arrival time (esti-a) of each car
+ * - remove type-3 edge and calculate s
+ * - simulated time += 1 sec, update esti-a
  */
 
 struct TimingConflictGraph;
@@ -21,6 +27,8 @@ typedef struct SchedAlgo{
     static void threeDimension(TimingConflictGraph& G);
     // First Come First Serve (performance lower bound)
     static void firstComeFirstServe(TimingConflictGraph& G);
+    // Priority based (estimated arrival time)
+    static void priorityBased(TimingConflictGraph& G);
 }SchedAlgo;
 
 #endif

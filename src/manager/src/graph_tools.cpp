@@ -101,6 +101,10 @@ void TimingConflictGraph::buildGraph(const Data& d){
     this->arrival_time.resize(d.M);
     for(int i = 0; i < d.M; i++)
         this->arrival_time[i] = d.vehicles[i].arrival_time;
+    this->source_lane.resize(d.M);
+    for(int i = 0; i < d.M; i++)
+        this->source_lane[i] = d.vehicles[i].source_lane;
+    this->same_src_delay = d.zone_pass + d.edge_wait[E_TYPE_2];
 }
 
 // 1 if cycle exists

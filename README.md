@@ -40,7 +40,7 @@ compile:
 ```bash
 cd /src/manager
 make clean && make # it requires 15 - 30 sec
-bin/manager <inputFile> <outputFile> <Algo=1|2|3|4|5>
+bin/manager <inputFile> <outputFile> <Algo=1|2|3|4>
 ```
 
 - `inputFile`: a JSON of a scenario
@@ -50,7 +50,6 @@ bin/manager <inputFile> <outputFile> <Algo=1|2|3|4|5>
 2 - FCFS
 3 - Priority
 4 - Graph-based
-5 - All
 
 
 ### Visualizer

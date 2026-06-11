@@ -11,6 +11,8 @@
  *
  * data.writeOutput(outputFile);// write result to JSON
  *
+ * int data.getMaxLeavingTime();// compute T_L
+ *
  * data.printContent();         // for debugging
  */
 
@@ -59,6 +61,8 @@ typedef struct Data{
     void getSchedOutput(const TimingConflictGraph& G);
     // write scheduled result to outputFile
     void writeOutput(std::string outputFile);
+    // obtain leaving time T_L of last vehicle
+    int getMaxLeavingTime();
     // for debugging purpose
     void printContent();
 

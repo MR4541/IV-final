@@ -53,8 +53,10 @@ int main(int argc, char *argv[]){
             SchedAlgo::priorityBased(G);
             break;
         case 4:
+            method = "Cycle-Removal-Based";
+            SchedAlgo::cycleRemovalBased(G);
+            break;
         default:
-            std::cout << "Not Implemented Yet QAQ\n";
             printUsage(argv[0]);
     }
     auto end = std::chrono::high_resolution_clock::now();

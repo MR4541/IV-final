@@ -63,6 +63,7 @@ typedef struct Vertex{
     std::vector<Edge*> out_edges;
     Edge* type1_edge; // (out) NULL if not exist
     Edge* type1_in_edge; // (in) NULL if not exist
+    Edge* type2_edge; // (out) NULL if not exist
     
     // dontcare in initialization
     VertexState state;

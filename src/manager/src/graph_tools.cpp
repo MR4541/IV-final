@@ -18,7 +18,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
         for(const auto& j : car.zones){
             auto v = std::make_unique<Vertex>(
                     Vertex{i, j, d.zone_pass, {}, {},
-                    nullptr, nullptr, V_WHITE, 0, 0, 0});
+                    nullptr, nullptr, nullptr, V_WHITE, 0, 0, 0});
             this->vertex_map[i][j] = v.get();
             this->vertex_list.push_back(std::move(v));
         }
@@ -68,6 +68,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
                         E_TYPE_2, E_UNDECIDED});
                 from->out_edges.push_back(e.get());
                 to->in_edges.push_back(e.get());
+                from->type2_edge = e.get();
                 this->edge_list.push_back(std::move(e));
                 prev_car_in_lane[src_lane] = to; // update
             }
@@ -115,6 +116,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
 // 1 if cycle exists
 int prioritizedTopoSort(TimingConflictGraph *G,
         std::vector<Vertex*>& topoOrder){
+    topoOrder.clear();
     // kahn's algorithm but with pseudo edges
     std::unordered_map<Vertex*, int> in_degree;
     for(const auto& v : G->vertex_list)
@@ -199,10 +201,18 @@ void TimingConflictGraph::calcVertexEnterTime(){
     }
 }
 
+int isAcyclic(TimingConflictGraph* G);
+
 void TimingConflictGraph::updateTimeSlack(){
     std::vector<Vertex*> topoOrder;
     // assert no cycle
-    assert(prioritizedTopoSort(this, topoOrder) == 0);
+    assert(isAcyclic(this));
+    //assert(prioritizedTopoSort(this, topoOrder) == 0);
+    prioritizedTopoSort(this, topoOrder);
+    if(topoOrder.size() != this->vertex_list.size()){
+        printf("topo %lu |V| %lu\n", topoOrder.size(), vertex_list.size());
+        assert(0);
+    }
 
     // calculate vertex enter time
     for(auto& v : topoOrder){
@@ -293,6 +303,7 @@ int TimingConflictGraph::isDeadlockFree(){
     std::unordered_map<HVertex, int, HVertexHash> in_degree;
     std::unordered_map<HVertex, std::vector<HVertex>,
         HVertexHash> out_edge_list;
+    int debug_cnt1 = 0, debug_cnt23 = 0;
     for(auto& u : vertex_list){
         if(u->type1_edge != nullptr){
             HVertex from = {u->i, u->j, u->type1_edge->v->j};
@@ -310,6 +321,7 @@ int TimingConflictGraph::isDeadlockFree(){
             HVertex to = {v->i, v->j, v->type1_edge->v->j};
             in_degree[to]++;
             out_edge_list[from].push_back(to);
+            debug_cnt1++;
         }
     }
     // build edge (other 4 types)
@@ -332,6 +344,7 @@ int TimingConflictGraph::isDeadlockFree(){
                 if(to.i == -1) continue;
                 in_degree[to]++;
                 out_edge_list[from].push_back(to);
+                debug_cnt23++;
             }
         }
     }
@@ -351,7 +364,8 @@ int TimingConflictGraph::isDeadlockFree(){
                 q.push(to);
         }
     }
-    
+    if(finished != (int)V.size())
+        printf("DL fin %d != %lu cnt(1) %d (23) %d\n", finished, V.size(), debug_cnt1, debug_cnt23);
     return finished == (int)V.size();
 }
 

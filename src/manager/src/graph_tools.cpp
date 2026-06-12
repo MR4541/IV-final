@@ -1,6 +1,7 @@
 #include <cassert>
 #include <queue>
 #include <unordered_map>
+#include <vector>
 #include "graph_tools.hpp"
 #include "serializer.hpp"
 
@@ -15,8 +16,8 @@ void TimingConflictGraph::buildGraph(const Data& d){
         const Vehicle& car = d.vehicles[i];
         for(const auto& j : car.zones){
             auto v = std::make_unique<Vertex>(
-                    Vertex{i, j, d.zone_pass, {}, {}, nullptr,
-                    V_WHITE, 0, 0});
+                    Vertex{i, j, d.zone_pass, {}, {},
+                    nullptr, nullptr, V_WHITE, 0, 0});
             this->vertex_map[i][j] = v.get();
             this->vertex_list.push_back(std::move(v));
         }
@@ -31,6 +32,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
                     Edge{u, v, d.edge_wait[E_TYPE_1], NULL,
                     E_TYPE_1, E_UNDECIDED});
             u->type1_edge = e.get();
+            v->type1_in_edge = e.get();
             u->out_edges.push_back(e.get());
             v->in_edges.push_back(e.get());
             this->edge_list.push_back(std::move(e));
@@ -192,6 +194,121 @@ void TimingConflictGraph::calcVertexEnterTime(){
         }
         v->s = max_s;
     }
+}
+
+int isAcyclic(TimingConflictGraph *G){
+    std::unordered_map<Vertex*, int> in_degree;
+    for(const auto& v : G->vertex_list)
+        in_degree[v.get()] = 0;
+    for(const auto& e : G->edge_list)
+        if(e->state == E_ON)
+            in_degree[e->v]++;
+    
+    std::queue<Vertex*> q;
+    for(const auto& v : G->vertex_list)
+        if(in_degree[v.get()] == 0)
+            q.push(v.get());
+    int finished = 0;
+    while(!q.empty()){
+        Vertex *u = q.front();
+        finished++;
+        q.pop();
+        for(auto& e : u->out_edges){
+            if(e->state != E_ON)
+                continue;
+            in_degree[e->v]--;
+            if(in_degree[e->v] == 0)
+                q.push(e->v);
+        }
+    }
+    return finished == (int)G->vertex_list.size();
+}
+
+struct HVertex{
+    int i, j1, j2;
+
+    // for unordered_map
+    bool operator==(const HVertex& other) const {
+        return i == other.i && j1 == other.j1 && j2 == other.j2;
+    }
+};
+
+struct HVertexHash{
+    size_t operator()(const HVertex& v) const {
+        size_t h1 = std::hash<int>{}(v.i);
+        size_t h2 = std::hash<int>{}(v.j1);
+        size_t h3 = std::hash<int>{}(v.j2);
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
+int TimingConflictGraph::isDeadlockFree(){
+    assert(isAcyclic(this));
+    // build vertex (i, j1, j2) for u(i, j1) -> v(i, j2)
+    std::vector<HVertex> V;
+    std::unordered_map<HVertex, int, HVertexHash> in_degree;
+    std::unordered_map<HVertex, std::vector<HVertex>,
+        HVertexHash> out_edge_list;
+    for(auto& u : vertex_list){
+        if(u->type1_edge != nullptr){
+            HVertex from = {u->i, u->j, u->type1_edge->v->j};
+            in_degree[from] = 0;
+            V.push_back(from);
+        }
+    }
+
+    // build edge (type 1)
+    for(auto& u : vertex_list){
+        if(u->type1_edge != nullptr &&
+                u->type1_edge->v->type1_edge != nullptr){
+            Vertex* v = u->type1_edge->v;
+            HVertex from = {u->i, u->j, v->j};
+            HVertex to = {v->i, v->j, v->type1_edge->v->j};
+            in_degree[to]++;
+            out_edge_list[from].push_back(to);
+        }
+    }
+    // build edge (other 4 types)
+    for(auto& e : edge_list){ // e: the type 2/3 edge
+        if(e->state != E_ON || e->type == E_TYPE_1)
+            continue;
+        std::vector<HVertex> froms = {{-1, 0, 0}, {-1, 0, 0}};
+        std::vector<HVertex> tos = {{-1, 0, 0}, {-1, 0, 0}};
+        if(e->u->type1_in_edge != nullptr)
+            froms[0] = {e->u->i, e->u->type1_in_edge->u->j, e->u->j};
+        if(e->u->type1_edge != nullptr)
+            froms[1] = {e->u->i, e->u->j, e->u->type1_edge->v->j};
+        if(e->v->type1_in_edge != nullptr)
+            tos[0] = {e->v->i, e->v->type1_in_edge->u->j, e->v->j};
+        if(e->v->type1_edge != nullptr)
+            tos[1] = {e->v->i, e->v->j, e->v->type1_edge->v->j};
+        for(auto& from : froms){
+            if(from.i == -1) continue;
+            for(auto& to : tos){
+                if(to.i == -1) continue;
+                in_degree[to]++;
+                out_edge_list[from].push_back(to);
+            }
+        }
+    }
+    // cycle check (kahn's algorithm)
+    int finished = 0;
+    std::queue<HVertex> q;
+    for(auto& v : V)
+        if(in_degree[v] == 0)
+            q.push(v);
+    while(!q.empty()){
+        HVertex from = q.front();
+        finished++;
+        q.pop();
+        for(auto& to : out_edge_list[from]){
+            in_degree[to]--;
+            if(in_degree[to] == 0)
+                q.push(to);
+        }
+    }
+    
+    return finished == (int)V.size();
 }
 
 int printEdge(const Edge* e){

@@ -12,6 +12,9 @@
  * - compute vertex (zone) entering time
  * - all edges must be either ON or OFF
  *
+ * isDeadlockFree()
+ * - perform graph-based verification
+ *
  * Other Usage
  * - to traverse V or E, use vertex_list, edge_list
  * - to get vertex (i, j) use vertex_map[i][j]
@@ -53,7 +56,8 @@ typedef struct Vertex{
     int p; // vertex passing time
     std::vector<Edge*> in_edges;
     std::vector<Edge*> out_edges;
-    Edge* type1_edge; // NULL if not exist
+    Edge* type1_edge; // (out) NULL if not exist
+    Edge* type1_in_edge; // (in) NULL if not exist
     
     // dontcare in initialization
     VertexState state;
@@ -86,6 +90,8 @@ typedef struct TimingConflictGraph{
     void buildGraph(const Data& d);
     // calculate Vertex.s based on edge states (on/off)
     void calcVertexEnterTime();
+    // deadlock freeness verification
+    int isDeadlockFree();
     // for debugging purpose
     void printContentAndCheck();
 

@@ -167,9 +167,9 @@ def vehicle_timeline(scene: Scene, vehicle: Vehicle) -> list[tuple[float, Point]
         return [(vehicle.arrival, src), (vehicle.arrival + scene.zone_passing_time, dst)]
 
     points = [src] + [scene.zones[zone_id] for zone_id in vehicle.path] + [dst]
-    first = max(vehicle.arrival, vehicle.schedule[0] - scene.zone_passing_time)
-    last = vehicle.schedule[-1] + scene.zone_passing_time
-    times = [first] + vehicle.schedule + [last]
+    first = max(vehicle.arrival, vehicle.schedule[0] - 0.5 * scene.zone_passing_time)
+    last = vehicle.schedule[-1] + 1.5 * scene.zone_passing_time
+    times = [first] + [t + 0.5 * scene.zone_passing_time for t in vehicle.schedule] + [last]
 
     for i in range(1, len(times)):
         if times[i] <= times[i - 1]:

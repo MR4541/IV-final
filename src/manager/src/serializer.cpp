@@ -82,6 +82,13 @@ void Data::writeOutput(std::string outputFile){
     f << outputData.dump(2); // indent = 2
 } // Data::writeOutput
 
+int Data::getMaxLeavingTime(){
+    int max_s = -1; // maximum vertex entering time
+    for(auto car : this->vehicles)
+        max_s = std::max(max_s, car.schedule.back());
+    return max_s + this->zone_pass; // leave = enter + pass
+} // Data::getMaxLeavingTime
+
 // print the contents; for debugging purpose
 void Data::printContent(){
     printf("===== printContent =====\n"

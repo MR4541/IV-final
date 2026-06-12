@@ -18,6 +18,9 @@
  * - calculate estimated arrival time (esti-a) of each car
  * - remove type-3 edge and calculate s
  * - simulated time += 1 sec, update esti-a
+ *
+ * cycleRemovalBased(G)
+ * - Cycle-Removal-Based Scheduling
  */
 
 struct TimingConflictGraph;
@@ -29,6 +32,8 @@ typedef struct SchedAlgo{
     static void firstComeFirstServe(TimingConflictGraph& G);
     // Priority based (estimated arrival time)
     static void priorityBased(TimingConflictGraph& G);
+    // Cycle-Removal-Based Scheduling
+    static void cycleRemovalBased(TimingConflictGraph& G);
 }SchedAlgo;
 
 #endif

@@ -2,8 +2,11 @@
 #include "graph_tools.hpp"
 #include <algorithm>
 #include <cassert>
+#include <climits>
+#include <cstdio>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 void SchedAlgo::threeDimension(TimingConflictGraph& G){
@@ -209,4 +212,176 @@ void SchedAlgo::priorityBased(TimingConflictGraph& G){
 
         time += 10; // 1 second
     }
+}
+
+void updateVertexStateAndPropagate(Vertex* v,
+        std::unordered_set<Vertex*>& leaderVertices);
+
+void findLeaders(TimingConflictGraph* G, int i_l, int i_r,
+        std::unordered_set<Vertex*>& leaderVertices){
+    leaderVertices.clear();
+    // v (first car of each lane, first zone of that car)
+    std::unordered_map<int, Vertex*> leader_of_lane;
+    for(auto& v : G->vertex_list){
+        if(v->i < i_l || i_r <= v->i || v->type1_in_edge != nullptr)
+            continue;
+        int v_srclane = G->source_lane[v->i];
+        auto it = leader_of_lane.find(v_srclane);
+        // record DNE or v->i arrives earlier
+        if(it == leader_of_lane.end() ||
+                v->i < leader_of_lane[v_srclane]->i)
+            leader_of_lane[v_srclane] = v.get();
+    }
+    // extract result (leader vertices)
+    for(auto& pair : leader_of_lane){
+        updateVertexStateAndPropagate(pair.second, leaderVertices);
+    }
+}
+
+void findCandidates(const std::unordered_set<Vertex*>& leaderVertices,
+        std::vector<Edge*>& candidateEdges){
+    candidateEdges.clear();
+    std::unordered_set<Edge*> candidate_set; // avoid duplicate edge
+    for(auto& v : leaderVertices){
+        for(auto& e : v->in_edges)
+            if(e->state == E_UNDECIDED)
+                candidate_set.insert(e);
+        for(auto& e : v->out_edges)
+            if(e->state == E_UNDECIDED)
+                candidate_set.insert(e);
+    }
+    // extract result
+    for(auto& e : candidate_set)
+        candidateEdges.push_back(e);
+}
+
+void updateVertexStateAndPropagate(Vertex* v,
+        std::unordered_set<Vertex*>& leaderVertices){
+    int is_gray = 1, is_black = 1;
+    // GRAY: u = BLACK for all type 1,2 e = (u, v)
+    // BLACK: GRAY && no undecided edge
+    for(auto& e : v->in_edges){
+        if(e->state == E_UNDECIDED){
+            is_black = 0;
+        }else if(e->type != E_TYPE_3 && e->u->state != V_BLACK){
+            is_gray = 0;
+            break;
+        }
+    }
+    is_black = is_black && is_gray;
+
+    if(is_black && is_gray){ // BLACK
+        leaderVertices.erase(v); // nothing happen if not in set
+        v->state = V_BLACK;
+        // propogate to type 1/2 outedge
+        if(v->type1_edge != nullptr)
+            updateVertexStateAndPropagate(v->type1_edge->v,
+                    leaderVertices);
+        if(v->type2_edge != nullptr)
+            updateVertexStateAndPropagate(v->type2_edge->v,
+                    leaderVertices);
+    }else if(is_gray){ // GRAY
+        v->state = V_GRAY;
+        leaderVertices.insert(v);
+    }
+}
+
+void updateLeaders(Edge* e,
+        std::unordered_set<Vertex*>& leaderVertices){
+    updateVertexStateAndPropagate(e->u, leaderVertices);
+    updateVertexStateAndPropagate(e->v, leaderVertices);
+}
+
+// perform cycle removal on vehicles [i_l, i_r)
+void removeType3Edges(TimingConflictGraph* G, int i_l, int i_r){
+    // initialization
+    for(auto& v : G->vertex_list){
+        if(v->i >= i_l)
+            v->state = V_WHITE;
+    }
+    for(auto& e : G->edge_list)
+        if(e->type != E_TYPE_3)
+            assert(e->state == E_ON);
+    for(auto& e : G->type3_edge_list){
+        int i1 = e->u->i, i2 = e->v->i;
+        if(i1 < i_l || i2 < i_l){
+            continue;
+        }else if(i_r <= i1 && i_r <= i2){
+            e->state = E_DONTCARE;
+        }else if(i_l <= i1 && i1 < i_r && i_l <= i2 && i2 < i_r){
+            e->state = E_UNDECIDED;
+        }else if(i_l <= i1 && i1 < i_r && i_r <= i2){
+            e->state = E_ON;
+        }else if(i_l <= i2 && i2 < i_r && i_r <= i1){
+            e->state = E_OFF;
+        }
+    }
+    //G->updateTimeSlack();
+
+    // start scheduling
+    int is_failed = 0;
+    std::unordered_set<Vertex*> leaderVertices;
+    findLeaders(G, i_l, i_r, leaderVertices);
+    while(leaderVertices.size() > 0){
+        std::vector<Edge*> candidateEdges;
+        findCandidates(leaderVertices, candidateEdges);
+        assert(candidateEdges.size() > 0);
+        // find-max-cost-edge
+        Edge* e_max = nullptr;
+        int cost_max = INT_MIN;
+        for(auto& e : candidateEdges){
+            assert(e->v->slack != INT_MAX);
+            int cost = e->u->s + e->u->p + e->w
+                - e->v->s - e->v->slack;
+            if(cost > cost_max){
+                cost_max = cost;
+                e_max = e;
+            }
+        }
+        Edge* e_max_sib = e_max->sibling;
+
+        // make decision and deadlock freeness check
+        e_max->state = E_OFF;
+        e_max_sib->state = E_ON;
+        if(!G->isDeadlockFree()){
+            printf("first try failed!\n");
+            e_max->state = E_ON;
+            e_max_sib->state = E_OFF;
+            if(!G->isDeadlockFree()){
+                printf("second try failed!\n");
+                is_failed = 1;
+                break;
+            }
+        }
+        updateLeaders(e_max, leaderVertices);
+        G->updateTimeSlack();
+    }
+
+
+    // divide and conquer if failed
+    if(is_failed){
+        printf("failed DC!\n");
+        int i_mid = (i_l + i_r) / 2;
+        removeType3Edges(G, i_l, i_mid);
+        removeType3Edges(G, i_mid, i_r);
+    }
+}
+
+void SchedAlgo::cycleRemovalBased(TimingConflictGraph& G){
+    // initialization
+    for(auto& v : G.vertex_list){
+        v->state = V_WHITE;
+        v->slack = INT_MAX;
+    }
+    for(auto& e : G.edge_list){
+        if(e->type == E_TYPE_3)
+            e->state = E_UNDECIDED;
+        else
+            e->state = E_ON;
+    }
+    // start scheduling
+    printf("start sched\n");
+    G.updateTimeSlack();
+    removeType3Edges(&G, 0, G.arrival_time.size()); // [0. M)
+    G.calcVertexEnterTime();
 }

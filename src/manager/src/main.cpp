@@ -8,7 +8,7 @@
 
 void printUsage(char *argv_0){
     std::cerr << "Usage: " << argv_0 << " <inputFile> <outputFile> <Algo=1|2|3|4>\n";
-    std::cerr << "1 - 3D-intersecton\n2 - FCFS\n3 - Priority\n4 - Graph-based\n";
+    std::cerr << "1 - 3D-intersecton\n2 - FCFS\n3 - Priority\n4 - Cycle-Removal-Based\n";
     exit(1);
 }
 

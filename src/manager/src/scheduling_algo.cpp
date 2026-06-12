@@ -2,6 +2,7 @@
 #include "graph_tools.hpp"
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <queue>
 #include <unordered_map>
 #include <vector>
@@ -209,4 +210,32 @@ void SchedAlgo::priorityBased(TimingConflictGraph& G){
 
         time += 10; // 1 second
     }
+}
+
+// update v.s and v.slack
+void updateTimeSlack(TimingConflictGraph* G){
+    // TODO:
+}
+
+// perform cycle removal on vehicles [l, r)
+void removeType3Edges(TimingConflictGraph* G, int l, int r){
+    // TODO:
+}
+
+void SchedAlgo::cycleRemovalBased(TimingConflictGraph& G){
+    // initialization
+    for(auto& v : G.vertex_list){
+        v->state = V_WHITE;
+        v->slack = INT_MAX;
+    }
+    for(auto& e : G.edge_list){
+        if(e->type == E_TYPE_3)
+            e->state = E_UNDECIDED;
+        else
+            e->state = E_ON;
+    }
+
+    updateTimeSlack(&G);
+    removeType3Edges(&G, 0, G.arrival_time.size()); // [0. M)
+    G.calcVertexEnterTime();
 }

@@ -62,6 +62,7 @@ typedef struct Vertex{
     // dontcare in initialization
     VertexState state;
     int is_locked; // for priority-based
+    int slack; // for cycle-removal-based
     
     // our goal
     int s; // zone entering time
@@ -75,6 +76,8 @@ typedef struct TimingConflictGraph{
     // we can traverse V and E using these
     std::vector<std::unique_ptr<Vertex>> vertex_list;
     std::vector<std::unique_ptr<Edge>> edge_list;
+    // subset of the above
+    std::vector<Edge*> type3_edge_list;
     // to access v_{i,j}, use vertex_map[i][j]
     std::vector<std::vector<Vertex*>> vertex_map;
     // arrival_time of vehicle i

@@ -49,7 +49,7 @@ bin/manager <inputFile> <outputFile> <Algo=1|2|3|4>
 1 - 3D-intersecton
 2 - FCFS
 3 - Priority
-4 - Graph-based
+4 - Cycle-Removal-Based
 
 
 ### Visualizer

@@ -17,7 +17,7 @@ void TimingConflictGraph::buildGraph(const Data& d){
         for(const auto& j : car.zones){
             auto v = std::make_unique<Vertex>(
                     Vertex{i, j, d.zone_pass, {}, {},
-                    nullptr, nullptr, V_WHITE, 0, 0});
+                    nullptr, nullptr, V_WHITE, 0, 0, 0});
             this->vertex_map[i][j] = v.get();
             this->vertex_list.push_back(std::move(v));
         }
@@ -94,6 +94,8 @@ void TimingConflictGraph::buildGraph(const Data& d){
                 v->in_edges.push_back(e1.get());
                 v->out_edges.push_back(e2.get());
                 u->in_edges.push_back(e2.get());
+                this->type3_edge_list.push_back(e1.get());
+                this->type3_edge_list.push_back(e2.get());
                 this->edge_list.push_back(std::move(e1)); // u -> v
                 this->edge_list.push_back(std::move(e2)); // v -> u
             }

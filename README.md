@@ -55,6 +55,22 @@ bin/manager <inputFile> <outputFile> <Algo=1|2|3|4|5>
 
 ### Visualizer
 
+Install dependencies:
+```bash
+pip install -r src/visualizer/requirements.txt
+```
+
+Run the Pygame animation with an intersection config and a Manager output file:
+```bash
+python src/visualizer/visualizer.py config/crossroad.json data/schedule.json --loop
+```
+
+Controls:
+- `Space`: pause/resume
+- `R`: restart
+- `+` / `-`: speed up / slow down
+- `Esc` or `Q`: quit
+
 ## Misc
 
 - 有些ㄧ開始是空的資料夾，我在底下放 .gitkeep 讓 git 可以 track 到目錄

@@ -33,11 +33,11 @@ int main(int argc, char *argv[]){
     Data data(argv[1]);
     //data.printContent();
     
+    auto start_full = std::chrono::high_resolution_clock::now();
     TimingConflictGraph G(data);
     //G.printContentAndCheck();
     
     auto start = std::chrono::high_resolution_clock::now();
-
     std::string method;
     switch (std::atoi(argv[3])) {
         case 1:
@@ -57,17 +57,20 @@ int main(int argc, char *argv[]){
             std::cout << "Not Implemented Yet QAQ\n";
             printUsage(argv[0]);
     }
-
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> runtime = end - start;
 
     //G.printContentAndCheck();
 
     data.getSchedOutput(G);
+    auto end_full = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> runtime_full =
+        end_full - start_full;
 
     std::cout << "Method: " << method << '\n';
     std::cout << "M: " << data.M << '\n';
     std::cout << "Algorithm Runtime (ms): " << runtime.count() << '\n';
+    std::cout << "Full Runtime (ms): " << runtime_full.count() << '\n';
     std::cout << "T_L (ticks): " << data.getMaxLeavingTime() << '\n';
     std::cout << "T_D (ticks): " << calcAvgDelay(data) << '\n';
 

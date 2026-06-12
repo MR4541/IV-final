@@ -12,6 +12,11 @@
  * - compute vertex (zone) entering time
  * - all edges must be either ON or OFF
  *
+ * updateTimeSlack()
+ * - compute vertex (zone) entering time
+ * - and vertex slack at the same time
+ * - edges don't need to be ON of OFF
+ *
  * isDeadlockFree()
  * - perform graph-based verification
  *
@@ -93,6 +98,8 @@ typedef struct TimingConflictGraph{
     void buildGraph(const Data& d);
     // calculate Vertex.s based on edge states (on/off)
     void calcVertexEnterTime();
+    // update v.s and v.slack
+    void updateTimeSlack();
     // deadlock freeness verification
     int isDeadlockFree();
     // for debugging purpose

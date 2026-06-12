@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <queue>
 #include <unordered_map>
@@ -195,6 +196,47 @@ void TimingConflictGraph::calcVertexEnterTime(){
             }
         }
         v->s = max_s;
+    }
+}
+
+void TimingConflictGraph::updateTimeSlack(){
+    std::vector<Vertex*> topoOrder;
+    // assert no cycle
+    assert(prioritizedTopoSort(this, topoOrder) == 0);
+
+    // calculate vertex enter time
+    for(auto& v : topoOrder){
+        int max_s = arrival_time[v->i];
+        for(auto& e : v->in_edges){
+            if(e->state != E_ON)
+                continue;
+            if(e->type == E_TYPE_1){
+                max_s = std::max(max_s, e->u->s + e->u->p + e->w);
+            }else{ // E_TYPE_2 || E_TYPE_3
+                if(e->u->type1_edge == NULL){
+                    max_s = std::max(max_s, e->u->s + e->u->p + e->w);
+                }else{
+                    // note that s-w+w >= s+p+w
+                    // so we don't need to max(max_s, s+p+w)
+                    max_s = std::max(max_s,
+                            e->u->type1_edge->v->s 
+                            - e->u->type1_edge->w + e->w);
+                }
+            }
+        }
+        v->s = max_s;
+    }
+    
+    // calculate vertex slack
+    int max_leave_t = 0;
+    for(auto& v : vertex_list)
+        max_leave_t = std::max(max_leave_t, v->s + v->p);
+    // visit in reversed topoOrder
+    for(auto it = topoOrder.rbegin(); it != topoOrder.rend(); ++it){
+        Vertex* u = *it;
+        u->slack = max_leave_t - u->s - u->p;
+        for(auto& e : u->out_edges)
+            u->slack = std::min(u->slack, e->v->slack);
     }
 }
 

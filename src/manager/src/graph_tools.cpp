@@ -134,8 +134,10 @@ int prioritizedTopoSort(TimingConflictGraph *G,
         // for type 2/3 edge (u.i, u.j) -> (i2, u.j)
         // add pseudo edge (u.i, j2) -> (i2, u.j)
         for(const auto& e : u->out_edges){
-            if(e->type == E_TYPE_1 || e->state != E_ON)
+            if(e->type == E_TYPE_1 || e->state != E_ON){
                 continue;
+            }
+            assert(e->state == E_ON && e->type != E_TYPE_1);
             pseudo_edges[u->type1_edge->v].push_back(e->v);
             in_degree[e->v]++;
         }
@@ -203,15 +205,54 @@ void TimingConflictGraph::calcVertexEnterTime(){
 
 int isAcyclic(TimingConflictGraph* G);
 
+// do not use pseudo_edges
+int normalTopoSort(TimingConflictGraph* G, std::vector<Vertex*> topoOrder){
+    topoOrder.clear();
+    std::unordered_map<Vertex*, int> in_degree;
+    for(const auto& v : G->vertex_list)
+        in_degree[v.get()] = 0;
+    for(const auto& e : G->edge_list)
+        if(e->state == E_ON)
+            in_degree[e->v]++;
+    std::queue<Vertex*> q;
+    for(const auto& v : G->vertex_list)
+        if(in_degree[v.get()] == 0)
+            q.push(v.get());
+    while(!q.empty()){
+        Vertex* u = q.front();
+        topoOrder.push_back(u);
+        q.pop();
+        for(auto& e : u->out_edges){ // real edges
+            if(e->state != E_ON)
+                continue;
+            in_degree[e->v]--;
+            if(in_degree[e->v] == 0)
+                q.push(e->v);
+        }
+    }
+    // cycle detection
+    return topoOrder.size() != G->vertex_list.size();
+}
+
 void TimingConflictGraph::updateTimeSlack(){
     std::vector<Vertex*> topoOrder;
     // assert no cycle
     assert(isAcyclic(this));
     //assert(prioritizedTopoSort(this, topoOrder) == 0);
-    prioritizedTopoSort(this, topoOrder);
-    if(topoOrder.size() != this->vertex_list.size()){
-        printf("topo %lu |V| %lu\n", topoOrder.size(), vertex_list.size());
-        assert(0);
+    //prioritizedTopoSort(this, topoOrder);
+    //if(topoOrder.size() != this->vertex_list.size()){
+    //    printf("topo %lu |V| %lu\ntopo", topoOrder.size(), vertex_list.size());
+    //    for(auto& v : topoOrder)
+    //        printf("(%d,%d),", v->i, v->j);
+    //    printf("\n");
+    //    this->printContentAndCheck();
+    //    assert(0);
+    //}
+    if(prioritizedTopoSort(this, topoOrder) == 1){
+        //printf("fallback to normalTopoSort\n");
+        assert(normalTopoSort(this, topoOrder) == 0);
+    }else{
+        //printf("nice\n");
     }
 
     // calculate vertex enter time
@@ -297,13 +338,13 @@ struct HVertexHash{
 };
 
 int TimingConflictGraph::isDeadlockFree(){
-    assert(isAcyclic(this));
+    if(!isAcyclic(this)) return 0;
     // build vertex (i, j1, j2) for u(i, j1) -> v(i, j2)
     std::vector<HVertex> V;
     std::unordered_map<HVertex, int, HVertexHash> in_degree;
     std::unordered_map<HVertex, std::vector<HVertex>,
         HVertexHash> out_edge_list;
-    int debug_cnt1 = 0, debug_cnt23 = 0;
+    //int debug_cnt1 = 0, debug_cnt23 = 0;
     for(auto& u : vertex_list){
         if(u->type1_edge != nullptr){
             HVertex from = {u->i, u->j, u->type1_edge->v->j};
@@ -321,7 +362,7 @@ int TimingConflictGraph::isDeadlockFree(){
             HVertex to = {v->i, v->j, v->type1_edge->v->j};
             in_degree[to]++;
             out_edge_list[from].push_back(to);
-            debug_cnt1++;
+            //debug_cnt1++;
         }
     }
     // build edge (other 4 types)
@@ -344,7 +385,7 @@ int TimingConflictGraph::isDeadlockFree(){
                 if(to.i == -1) continue;
                 in_degree[to]++;
                 out_edge_list[from].push_back(to);
-                debug_cnt23++;
+                //debug_cnt23++;
             }
         }
     }
@@ -364,8 +405,8 @@ int TimingConflictGraph::isDeadlockFree(){
                 q.push(to);
         }
     }
-    if(finished != (int)V.size())
-        printf("DL fin %d != %lu cnt(1) %d (23) %d\n", finished, V.size(), debug_cnt1, debug_cnt23);
+    //if(finished != (int)V.size())
+    //    printf("DL fin %d != %lu cnt(1) %d (23) %d\n", finished, V.size(), debug_cnt1, debug_cnt23);
     return finished == (int)V.size();
 }
 
@@ -396,8 +437,8 @@ void TimingConflictGraph::printContentAndCheck(){
             "vertex_list:\n", (int)edge_list.size());
     int in_edges_num = 0, out_edges_num = 0, pair_error = 0;
     for(const auto& u : vertex_list){
-        printf("[i %3d, j %3d], s %3d, pass_time: %d\n"
-                "\ttype1_edges:", u->i, u->j, u->s, u->p);
+        printf("[i %3d, j %3d], src_lane %3d, s %3d, pass_time: %d\n"
+                "\ttype1_edges:", u->i, u->j, source_lane[u->i], u->s, u->p);
         if(u->type1_edge != NULL) printf(" -> (%d, %d)\n",
                 u->type1_edge->v->i, u->type1_edge->v->j);
         else printf(" DNE\n");
@@ -418,7 +459,7 @@ void TimingConflictGraph::printContentAndCheck(){
             "none = 0, in map = 1, in list = 2, both = 3\n"
             "%d cars\\%d zones\n", M, N);
     int vertex_matrix[M][N];
-    for(int i = 0; i < M*N; i++) vertex_matrix[i%M][i%N] = 0;
+    for(int i = 0; i < M*N; i++) vertex_matrix[i/N][i%N] = 0;
     for(const auto& u : vertex_list)
         vertex_matrix[u->i][u->j] += 2;
     for(int i = 0; i < M; i++)

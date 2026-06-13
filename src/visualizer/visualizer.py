@@ -398,7 +398,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--height", type=int, default=720, help="window height")
     parser.add_argument("--margin", type=int, default=90, help="map margin in pixels")
     parser.add_argument("--fps", type=int, default=60, help="target frames per second")
-    parser.add_argument("--speed", type=float, default=8.0, help="simulation ticks per real second")
+    parser.add_argument("--speed", type=float, default=10.0, help="simulation ticks per real second")
     parser.add_argument("--loop", action="store_true", help="restart automatically after the final vehicle exits")
     return parser.parse_args()
 

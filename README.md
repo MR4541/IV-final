@@ -34,6 +34,12 @@ IV-final/
 
 ### Generator
 
+The Python script has no dependency and can be run with
+```bash
+python src/generator/generate.py -o data/scenario.json -r 0.1 -t 300 config/crossroad.json
+```
+Run `python src/generator/generate.py --help` for more information.
+
 ### Manager
 
 compile:
